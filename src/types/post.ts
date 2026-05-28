@@ -18,6 +18,7 @@ export interface PostedAccount {
   socialAccountId: string;
   platform?: string;
   accountName?: string;
+  accountUsername?: string;
   username?: string;
   postedAt?: string;
   url?: string;
@@ -61,4 +62,6 @@ export interface PostQuery {
   userId?: string;
   status?: PostStatus;
   isPosted?: boolean;
+  platform?: string;
+  socialAccountId?: string;
 }

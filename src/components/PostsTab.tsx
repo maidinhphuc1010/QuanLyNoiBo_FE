@@ -4,21 +4,41 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../App';
 import { getItemId } from '../services/api';
 import { postService } from '../services/post.service';
+import { socialAccountService } from '../services/social-account.service';
 import { userService } from '../services/user.service';
 import type { Post, PostPayload } from '../types/post';
+import type { SocialAccount } from '../types/social-account';
 import type { User } from '../types/user';
 import ImageSearchBox from './ImageSearchBox';
 import PostCard from './PostCard';
 import PostForm from './PostForm';
 
+const platformOptions = [
+  { label: 'Facebook', value: 'facebook' },
+  { label: 'TikTok', value: 'tiktok' },
+  { label: 'Instagram', value: 'instagram' },
+  { label: 'YouTube', value: 'youtube' },
+  { label: 'Zalo', value: 'zalo' },
+  { label: 'Shopee', value: 'shopee' },
+  { label: 'Lazada', value: 'lazada' },
+  { label: 'Khác', value: 'other' },
+];
+
+function getPlatformLabel(platform?: string) {
+  return platformOptions.find((option) => option.value === platform)?.label || platform || '';
+}
+
 export default function PostsTab() {
   const { user } = useAuth();
   const [items, setItems] = useState<Post[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [editing, setEditing] = useState<Post | null>(null);
   const [search, setSearch] = useState('');
   const [userId, setUserId] = useState<string | undefined>();
   const [isPosted, setIsPosted] = useState<boolean | undefined>();
+  const [platform, setPlatform] = useState<string | undefined>();
+  const [socialAccountId, setSocialAccountId] = useState<string | undefined>();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(12);
   const [total, setTotal] = useState(0);
@@ -33,7 +53,7 @@ export default function PostsTab() {
   const loadPosts = async (nextPage = page, nextLimit = limit) => {
     try {
       setLoading(true);
-      const res = await postService.getPosts({ page: nextPage, limit: nextLimit, search, userId, isPosted });
+      const res = await postService.getPosts({ page: nextPage, limit: nextLimit, search, userId, isPosted, platform, socialAccountId });
       setItems(res.data);
       setTotal(res.total);
     } catch (error: any) {
@@ -62,12 +82,17 @@ export default function PostsTab() {
   useEffect(() => {
     if (isImageSearchMode) searchByImage(imageSearchFile, page, limit);
     else loadPosts(page, limit);
-  }, [page, limit, search, userId, isPosted]);
+  }, [page, limit, search, userId, isPosted, platform, socialAccountId]);
 
   useEffect(() => {
     if (user?.role === 'admin') {
       userService.getUsers({ page: 1, limit: 100 }).then((res) => setUsers(res.data)).catch(() => undefined);
     }
+
+    socialAccountService
+      .getSocialAccounts({ page: 1, limit: 200, isActive: true })
+      .then((res) => setSocialAccounts(res.data))
+      .catch(() => undefined);
   }, [user?.role]);
 
   const handleSubmit = async (payload: PostPayload) => {
@@ -118,6 +143,14 @@ export default function PostsTab() {
   };
 
   const userOptions = useMemo(() => users.map((u) => ({ label: u.name || u.username || u.email, value: getItemId(u) })), [users]);
+  const socialAccountOptions = useMemo(
+    () =>
+      socialAccounts.map((account) => ({
+        label: `${getPlatformLabel(account.platform)} - ${account.name}${account.username ? ` (${account.username})` : ''}`,
+        value: getItemId(account),
+      })),
+    [socialAccounts],
+  );
 
   return (
     <div className="two-column-layout">
@@ -163,6 +196,30 @@ export default function PostsTab() {
             ]}
             onChange={(value) => {
               setIsPosted(value);
+              setPage(1);
+              setIsImageSearchMode(false);
+            }}
+          />
+          <Select
+            allowClear
+            placeholder="Lọc nền tảng đã post"
+            value={platform}
+            options={platformOptions}
+            onChange={(value) => {
+              setPlatform(value);
+              setPage(1);
+              setIsImageSearchMode(false);
+            }}
+          />
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="Lọc tài khoản đã post"
+            value={socialAccountId}
+            options={socialAccountOptions}
+            onChange={(value) => {
+              setSocialAccountId(value);
               setPage(1);
               setIsImageSearchMode(false);
             }}

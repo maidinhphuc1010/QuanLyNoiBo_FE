@@ -34,6 +34,21 @@ function toPostMedia(url: string): PostMedia {
   };
 }
 
+function getPlatformLabel(platform?: string) {
+  const labels: Record<string, string> = {
+    facebook: 'Facebook',
+    tiktok: 'TikTok',
+    instagram: 'Instagram',
+    youtube: 'YouTube',
+    zalo: 'Zalo',
+    shopee: 'Shopee',
+    lazada: 'Lazada',
+    other: 'Khác',
+  };
+
+  return platform ? labels[platform] || platform : '';
+}
+
 export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: PostFormProps) {
   const [form] = Form.useForm();
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
@@ -132,6 +147,7 @@ export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: P
           socialAccountId,
           platform: account?.platform,
           accountName: account?.name,
+          accountUsername: account?.username,
           username: account?.username,
           postedAt: values.postedAccountDates?.[socialAccountId]?.toISOString?.(),
           url: values.postedAccountUrls?.[socialAccountId],
@@ -212,7 +228,7 @@ export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: P
             showSearch
             optionFilterProp="label"
             options={socialAccounts.map((account) => ({
-              label: `${account.platform} - ${account.name}${account.username ? ` (${account.username})` : ''}`,
+              label: `${getPlatformLabel(account.platform)} - ${account.name}${account.username ? ` (${account.username})` : ''}`,
               value: getItemId(account),
             }))}
             placeholder="Chọn tài khoản/nền tảng đã đăng bài"
@@ -228,7 +244,7 @@ export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: P
                 {selectedIds.map((socialAccountId) => {
                   const account = socialAccounts.find((item) => getItemId(item) === socialAccountId);
                   const label = account
-                    ? `${account.platform} - ${account.name}${account.username ? ` (${account.username})` : ''}`
+                    ? `${getPlatformLabel(account.platform)} - ${account.name}${account.username ? ` (${account.username})` : ''}`
                     : socialAccountId;
 
                   return (

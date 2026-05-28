@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { getItemId } from '../services/api';
 import { uploadService } from '../services/upload.service';
-import type { Post, PostMedia, PostStatus } from '../types/post';
+import type { Post, PostedAccount, PostMedia, PostStatus } from '../types/post';
 import { isVideo } from './MediaPreview';
 
 interface PostCardProps {
@@ -33,6 +33,25 @@ const postStatusLabel: Record<PostStatus, string> = {
   posted: 'Đã post',
 };
 
+const platformLabels: Record<string, string> = {
+  facebook: 'Facebook',
+  tiktok: 'TikTok',
+  instagram: 'Instagram',
+  youtube: 'YouTube',
+  zalo: 'Zalo',
+  shopee: 'Shopee',
+  lazada: 'Lazada',
+  other: 'Khác',
+};
+
+function getPlatformLabel(platform?: string) {
+  return platform ? platformLabels[platform] || platform : '';
+}
+
+function getPostedAccountUsername(account: PostedAccount) {
+  return account.accountUsername || account.username;
+}
+
 export default function PostCard({ post, onEdit, onDelete, onTogglePosted }: PostCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
   const id = getItemId(post);
@@ -44,7 +63,7 @@ export default function PostCard({ post, onEdit, onDelete, onTogglePosted }: Pos
   const relatedProductsText = post.relatedProducts?.map((product) => product.name).filter(Boolean).join(', ') || '';
   const postedAccounts = post.postedAccounts || [];
   const postedAccountsText = postedAccounts
-    .map((account) => [account.platform, account.accountName || account.username, account.url].filter(Boolean).join(' - '))
+    .map((account) => [getPlatformLabel(account.platform), account.accountName || getPostedAccountUsername(account), account.url].filter(Boolean).join(' - '))
     .join('\n');
 
   const copy = async (text?: string, label = 'nội dung') => {
@@ -186,7 +205,7 @@ export default function PostCard({ post, onEdit, onDelete, onTogglePosted }: Pos
             <Tag color={statusColor}>{statusLabel}</Tag>
             {postedAccounts.map((account) => (
               <Tag color="blue" key={account.socialAccountId}>
-                {[account.platform, account.accountName || account.username].filter(Boolean).join(' - ') || account.socialAccountId}
+                {[getPlatformLabel(account.platform), account.accountName || getPostedAccountUsername(account)].filter(Boolean).join(' - ') || account.socialAccountId}
               </Tag>
             ))}
           </Space>
@@ -300,7 +319,7 @@ export default function PostCard({ post, onEdit, onDelete, onTogglePosted }: Pos
               {postedAccounts.length ? (
                 <Space direction="vertical" className="w-100">
                   {postedAccounts.map((account) => {
-                    const label = [account.platform, account.accountName || account.username].filter(Boolean).join(' - ') || account.socialAccountId;
+                    const label = [getPlatformLabel(account.platform), account.accountName || getPostedAccountUsername(account)].filter(Boolean).join(' - ') || account.socialAccountId;
                     const postedAt = account.postedAt ? dayjs(account.postedAt).format('DD/MM/YYYY HH:mm') : undefined;
 
                     return (
