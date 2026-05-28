@@ -6,14 +6,14 @@ import { socialAccountService } from '../services/social-account.service';
 import type { SocialAccount, SocialAccountPayload } from '../types/social-account';
 
 const platformOptions = [
-  { label: 'Facebook', value: 'Facebook' },
-  { label: 'TikTok', value: 'TikTok' },
-  { label: 'Instagram', value: 'Instagram' },
-  { label: 'YouTube', value: 'YouTube' },
-  { label: 'Zalo', value: 'Zalo' },
-  { label: 'Shopee', value: 'Shopee' },
-  { label: 'Lazada', value: 'Lazada' },
-  { label: 'Khác', value: 'Khác' },
+  { label: 'Facebook', value: 'facebook' },
+  { label: 'TikTok', value: 'tiktok' },
+  { label: 'Instagram', value: 'instagram' },
+  { label: 'YouTube', value: 'youtube' },
+  { label: 'Zalo', value: 'zalo' },
+  { label: 'Shopee', value: 'shopee' },
+  { label: 'Lazada', value: 'lazada' },
+  { label: 'Khác', value: 'other' },
 ];
 
 export default function SocialAccountsTab() {
@@ -188,7 +188,7 @@ export default function SocialAccountsTab() {
               {
                 title: 'Nền tảng',
                 dataIndex: 'platform',
-                render: (value: string) => <Tag color="blue">{value}</Tag>,
+                render: (value: string) => <Tag color="blue">{platformOptions.find((option) => option.value === value)?.label || value}</Tag>,
               },
               {
                 title: 'Tài khoản',
