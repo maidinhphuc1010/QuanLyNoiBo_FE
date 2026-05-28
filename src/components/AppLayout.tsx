@@ -12,7 +12,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <Layout className="app-shell">
       <Header className="app-header">
         <div className="app-title">
-          <div className="brand-logo small">CS</div>
+          <img className="brand-logo small" src="/Logo.png" alt="Content Storage" />
           <span>Content Storage</span>
         </div>
         <Space size="middle" wrap>

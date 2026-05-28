@@ -62,13 +62,10 @@ svg {
   height: 64px;
   margin: 0 auto 12px;
   border-radius: 20px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(135deg, #0f9f9a, #08706d);
-  color: #fff;
-  font-weight: 800;
-  letter-spacing: 1px;
-  box-shadow: 0 12px 28px rgba(15, 159, 154, 0.35);
+  display: block;
+  object-fit: contain;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(15, 159, 154, 0.25);
 }
 
 .brand-logo.small {
@@ -247,6 +244,29 @@ svg {
   margin-bottom: 16px;
 }
 
+.statistics-panel {
+  min-width: 0;
+}
+
+.statistics-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.statistics-toolbar .ant-typography {
+  margin-top: 0;
+}
+
+.statistics-range-card,
+.stat-card {
+  border-radius: 18px;
+  border-color: #d9f3f1;
+  box-shadow: 0 8px 22px rgba(8, 91, 88, 0.06);
+}
+
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
@@ -422,6 +442,19 @@ svg {
 
   .list-toolbar {
     grid-template-columns: 1fr;
+  }
+
+  .statistics-toolbar {
+    flex-direction: column;
+  }
+
+  .statistics-toolbar > .ant-space {
+    width: 100%;
+  }
+
+  .statistics-toolbar .ant-select,
+  .statistics-toolbar .ant-picker {
+    flex: 1;
   }
 
   .card-grid {

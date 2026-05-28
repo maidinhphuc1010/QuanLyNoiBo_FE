@@ -28,7 +28,7 @@ export default function LoginPage() {
     <div className="login-page">
       <Card className="login-card">
         <div className="login-brand">
-          <div className="brand-logo">CS</div>
+          <img className="brand-logo" src="/Logo.png" alt="Content Storage" />
           <Title level={2}>Content Storage</Title>
           <Text type="secondary">Đăng nhập để quản lý kho sản phẩm và nội dung</Text>
         </div>
