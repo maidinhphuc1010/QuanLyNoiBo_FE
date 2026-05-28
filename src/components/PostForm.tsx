@@ -158,9 +158,8 @@ export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: P
         </Form.Item>
         <Form.Item name="status" label="Trạng thái" rules={[{ required: true }]}>
           <Select options={[
-            { label: 'Draft', value: 'draft' },
-            { label: 'Posted', value: 'posted' },
-            { label: 'Scheduled', value: 'scheduled' },
+            { label: 'Đang chờ', value: 'draft' },
+            { label: 'Đã post', value: 'posted' },
           ]} />
         </Form.Item>
         <Space wrap>

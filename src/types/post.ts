@@ -1,4 +1,4 @@
-export type PostStatus = 'draft' | 'posted' | 'scheduled';
+export type PostStatus = 'draft' | 'posted';
 
 export interface RelatedProductRef {
   id?: string;
@@ -45,4 +45,5 @@ export interface PostQuery {
   limit?: number;
   search?: string;
   userId?: string;
+  status?: PostStatus;
 }

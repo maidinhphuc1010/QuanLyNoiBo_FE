@@ -2,6 +2,7 @@ import { CopyOutlined, DeleteOutlined, EditOutlined, EyeOutlined, LockOutlined, 
 import { Button, Descriptions, Modal, Popconfirm, Space, Table, Tag, Typography, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { getItemId } from '../services/api';
 import type { User } from '../types/user';
@@ -34,6 +35,13 @@ export default function UserTable({ users, loading, total, page, limit, currentU
     <Button size="small" icon={<CopyOutlined />} onClick={() => copy(text, label)}>
       Copy
     </Button>
+  );
+
+  const detailLine = (content: ReactNode, copyText?: string | number | boolean, label = 'Nội dung') => (
+    <div className="detail-line">
+      <div className="detail-value">{content}</div>
+      <div className="detail-actions">{copyButton(copyText, label)}</div>
+    </div>
   );
 
   const getUserActive = (user: User) => (user.status ? user.status === 'active' : user.isActive !== false);
@@ -96,7 +104,6 @@ export default function UserTable({ users, loading, total, page, limit, currentU
     },
   ];
 
-  const detailId = detailUser ? getItemId(detailUser) : '';
   const detailActive = detailUser ? getUserActive(detailUser) : false;
 
   return (
@@ -130,7 +137,6 @@ export default function UserTable({ users, loading, total, page, limit, currentU
             key="copy-all"
             icon={<CopyOutlined />}
             onClick={() => copy([
-              `ID: ${detailId}`,
               `Email: ${detailUser.email || ''}`,
               `Tên: ${detailUser.name || detailUser.username || ''}`,
               `Role: ${detailUser.role || ''}`,
@@ -154,41 +160,20 @@ export default function UserTable({ users, loading, total, page, limit, currentU
       >
         {detailUser && (
           <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="ID">
-              <Space>
-                <Text code>{detailId}</Text>
-                {copyButton(detailId, 'ID')}
-              </Space>
-            </Descriptions.Item>
             <Descriptions.Item label="Email">
-              <Space direction="vertical" className="w-100">
-                <Text>{detailUser.email || '-'}</Text>
-                {copyButton(detailUser.email, 'email')}
-              </Space>
+              {detailLine(<Text>{detailUser.email || '-'}</Text>, detailUser.email, 'email')}
             </Descriptions.Item>
             <Descriptions.Item label="Tên">
-              <Space direction="vertical" className="w-100">
-                <Text>{detailUser.name || detailUser.username || '-'}</Text>
-                {copyButton(detailUser.name || detailUser.username, 'tên')}
-              </Space>
+              {detailLine(<Text>{detailUser.name || detailUser.username || '-'}</Text>, detailUser.name || detailUser.username, 'tên')}
             </Descriptions.Item>
             <Descriptions.Item label="Username">
-              <Space direction="vertical" className="w-100">
-                <Text>{detailUser.username || '-'}</Text>
-                {copyButton(detailUser.username, 'username')}
-              </Space>
+              {detailLine(<Text>{detailUser.username || '-'}</Text>, detailUser.username, 'username')}
             </Descriptions.Item>
             <Descriptions.Item label="Role">
-              <Space>
-                <Tag color={detailUser.role === 'admin' ? 'cyan' : 'green'}>{detailUser.role}</Tag>
-                {copyButton(detailUser.role, 'role')}
-              </Space>
+              {detailLine(<Tag color={detailUser.role === 'admin' ? 'cyan' : 'green'}>{detailUser.role}</Tag>, detailUser.role, 'role')}
             </Descriptions.Item>
             <Descriptions.Item label="Trạng thái">
-              <Space>
-                <Tag color={detailActive ? 'success' : 'error'}>{detailActive ? 'active' : 'inactive'}</Tag>
-                {copyButton(detailActive ? 'active' : 'inactive', 'trạng thái')}
-              </Space>
+              {detailLine(<Tag color={detailActive ? 'success' : 'error'}>{detailActive ? 'active' : 'inactive'}</Tag>, detailActive ? 'active' : 'inactive', 'trạng thái')}
             </Descriptions.Item>
             <Descriptions.Item label="Ngày tạo">{detailUser.createdAt ? dayjs(detailUser.createdAt).format('DD/MM/YYYY HH:mm') : '-'}</Descriptions.Item>
             <Descriptions.Item label="Cập nhật">{detailUser.updatedAt ? dayjs(detailUser.updatedAt).format('DD/MM/YYYY HH:mm') : '-'}</Descriptions.Item>

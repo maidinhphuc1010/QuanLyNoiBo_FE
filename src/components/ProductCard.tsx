@@ -1,6 +1,7 @@
 import { CopyOutlined, DeleteOutlined, EditOutlined, LinkOutlined } from '@ant-design/icons';
 import { Button, Card, Descriptions, Empty, Image, Modal, Popconfirm, Space, Tag, Tooltip, Typography, message } from 'antd';
 import dayjs from 'dayjs';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { getItemId } from '../services/api';
 import type { Product } from '../types/product';
@@ -25,6 +26,8 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
   const images = product.images || product.media || [];
   const cover = images[0];
   const id = getItemId(product);
+  const postLinkStatusLabel = product.postLinkStatusLabel || (product.postLinkStatus === 'linked' ? 'Đã gắn với bài đăng' : product.postLinkStatus === 'unlinked' ? 'Chưa gắn với bài đăng' : undefined);
+  const postLinkStatusColor = product.postLinkStatus === 'linked' ? 'green' : 'orange';
 
   const copy = async (text?: string | number, label = 'Nội dung') => {
     if (text === undefined || text === null || text === '') return message.warning('Không có nội dung để copy');
@@ -36,6 +39,13 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
     <Button size="small" icon={<CopyOutlined />} onClick={() => copy(text, label)}>
       Copy
     </Button>
+  );
+
+  const detailLine = (content: ReactNode, copyText?: string | number, label = 'Nội dung') => (
+    <div className="detail-line">
+      <div className="detail-value">{content}</div>
+      <div className="detail-actions">{copyButton(copyText, label)}</div>
+    </div>
   );
 
   return (
@@ -78,6 +88,7 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
             {product.name}
           </Text>
           <Tag color={product.price ? 'green' : 'default'}>{formatVND(product.price)}</Tag>
+          {postLinkStatusLabel && <Tag color={postLinkStatusColor}>{postLinkStatusLabel}</Tag>}
           {product.link && (
             <Paragraph className="card-link" copyable={{ text: product.link }} ellipsis={{ rows: 1 }}>
               <LinkOutlined /> {product.link}
@@ -97,6 +108,7 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
             `Giá: ${formatVND(product.price)}`,
             `Link: ${product.link || ''}`,
             `Ghi chú: ${product.note || ''}`,
+            `Liên kết bài đăng: ${postLinkStatusLabel || ''}`,
           ].join('\n'), 'thông tin sản phẩm')}>
             Copy tất cả
           </Button>,
@@ -120,37 +132,28 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
           )}
 
           <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="ID">
-              <Space>
-                <Text code>{id}</Text>
-                {copyButton(id, 'ID')}
-              </Space>
-            </Descriptions.Item>
             <Descriptions.Item label="Tên sản phẩm">
-              <Space direction="vertical" className="w-100">
-                <Text>{product.name || '-'}</Text>
-                {copyButton(product.name, 'tên sản phẩm')}
-              </Space>
+              {detailLine(<Text>{product.name || '-'}</Text>, product.name, 'tên sản phẩm')}
             </Descriptions.Item>
             <Descriptions.Item label="Giá">
-              <Space>
-                <Tag color={product.price ? 'green' : 'default'}>{formatVND(product.price)}</Tag>
-                {copyButton(product.price, 'giá')}
-              </Space>
+              {detailLine(<Tag color={product.price ? 'green' : 'default'}>{formatVND(product.price)}</Tag>, product.price, 'giá')}
             </Descriptions.Item>
             <Descriptions.Item label="Link">
-              {product.link ? (
-                <Space direction="vertical" className="w-100">
-                  <Typography.Link href={product.link} target="_blank">{product.link}</Typography.Link>
-                  {copyButton(product.link, 'link')}
-                </Space>
-              ) : '-'}
+              {detailLine(
+                product.link ? <Typography.Link href={product.link} target="_blank">{product.link}</Typography.Link> : <Text>-</Text>,
+                product.link,
+                'link',
+              )}
             </Descriptions.Item>
             <Descriptions.Item label="Ghi chú">
-              <Space direction="vertical" className="w-100">
-                <Paragraph>{product.note || '-'}</Paragraph>
-                {copyButton(product.note, 'ghi chú')}
-              </Space>
+              {detailLine(<Paragraph>{product.note || '-'}</Paragraph>, product.note, 'ghi chú')}
+            </Descriptions.Item>
+            <Descriptions.Item label="Liên kết bài đăng">
+              {detailLine(
+                postLinkStatusLabel ? <Tag color={postLinkStatusColor}>{postLinkStatusLabel}</Tag> : <Text>-</Text>,
+                postLinkStatusLabel,
+                'liên kết bài đăng',
+              )}
             </Descriptions.Item>
             <Descriptions.Item label="Ngày tạo">{product.createdAt ? dayjs(product.createdAt).format('DD/MM/YYYY HH:mm') : '-'}</Descriptions.Item>
             <Descriptions.Item label="Cập nhật">{product.updatedAt ? dayjs(product.updatedAt).format('DD/MM/YYYY HH:mm') : '-'}</Descriptions.Item>

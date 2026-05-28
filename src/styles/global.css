@@ -204,6 +204,14 @@ svg {
   cursor: pointer;
 }
 
+.download-media {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  z-index: 2;
+  opacity: 0.92;
+}
+
 .empty-preview,
 .no-cover {
   min-height: 86px;
@@ -271,6 +279,32 @@ svg {
   overflow-wrap: anywhere;
   word-break: break-word;
   font-size: 12px;
+}
+
+.detail-line {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px;
+}
+
+.detail-line .ant-typography,
+.detail-line .ant-typography-copy {
+  margin-bottom: 0;
+}
+
+.detail-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.detail-actions {
+  display: inline-flex;
+  justify-content: flex-end;
+  gap: 8px;
+  white-space: nowrap;
 }
 
 .ant-upload-wrapper .ant-upload-drag {

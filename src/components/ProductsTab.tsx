@@ -5,7 +5,7 @@ import { useAuth } from '../App';
 import { getItemId } from '../services/api';
 import { productService } from '../services/product.service';
 import { userService } from '../services/user.service';
-import type { Product, ProductPayload } from '../types/product';
+import type { Product, ProductPayload, ProductPostLinkStatus } from '../types/product';
 import type { User } from '../types/user';
 import ImageSearchBox from './ImageSearchBox';
 import ProductCard from './ProductCard';
@@ -18,6 +18,7 @@ export default function ProductsTab() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [search, setSearch] = useState('');
   const [userId, setUserId] = useState<string | undefined>();
+  const [postLinkStatus, setPostLinkStatus] = useState<ProductPostLinkStatus | undefined>();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(12);
   const [total, setTotal] = useState(0);
@@ -32,7 +33,7 @@ export default function ProductsTab() {
   const loadProducts = async (nextPage = page, nextLimit = limit) => {
     try {
       setLoading(true);
-      const res = await productService.getProducts({ page: nextPage, limit: nextLimit, search, userId });
+      const res = await productService.getProducts({ page: nextPage, limit: nextLimit, search, userId, postLinkStatus });
       setItems(res.data);
       setTotal(res.total);
     } catch (error: any) {
@@ -61,7 +62,7 @@ export default function ProductsTab() {
   useEffect(() => {
     if (isImageSearchMode) searchByImage(imageSearchFile, page, limit);
     else loadProducts(page, limit);
-  }, [page, limit, search, userId]);
+  }, [page, limit, search, userId, postLinkStatus]);
 
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -131,6 +132,20 @@ export default function ProductsTab() {
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
+              setPage(1);
+              setIsImageSearchMode(false);
+            }}
+          />
+          <Select
+            allowClear
+            placeholder="Lọc liên kết bài đăng"
+            value={postLinkStatus}
+            options={[
+              { label: 'Đã gắn với bài đăng', value: 'linked' },
+              { label: 'Chưa gắn với bài đăng', value: 'unlinked' },
+            ]}
+            onChange={(value) => {
+              setPostLinkStatus(value);
               setPage(1);
               setIsImageSearchMode(false);
             }}

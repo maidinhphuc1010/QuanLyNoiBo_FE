@@ -1,3 +1,5 @@
+export type ProductPostLinkStatus = 'linked' | 'unlinked';
+
 export interface Product {
   id: string;
   _id?: string;
@@ -9,6 +11,8 @@ export interface Product {
   media?: string[];
   userId?: string;
   user?: unknown;
+  postLinkStatus?: ProductPostLinkStatus;
+  postLinkStatusLabel?: string;
   similarity?: number;
   createdAt?: string;
   updatedAt?: string;
@@ -27,4 +31,5 @@ export interface ProductQuery {
   limit?: number;
   search?: string;
   userId?: string;
+  postLinkStatus?: ProductPostLinkStatus;
 }
