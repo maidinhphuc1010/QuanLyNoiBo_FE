@@ -1,5 +1,5 @@
 import { SearchOutlined } from '@ant-design/icons';
-import { Empty, Input, Pagination, Select, Spin, message } from 'antd';
+import { Empty, Input, Modal, Pagination, Select, Spin, message } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../App';
 import { getItemId } from '../services/api';
@@ -44,6 +44,9 @@ export default function PostsTab() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [postedModalOpen, setPostedModalOpen] = useState(false);
+  const [postedTarget, setPostedTarget] = useState<Post | null>(null);
+  const [selectedPostedAccountIds, setSelectedPostedAccountIds] = useState<string[]>([]);
 
   const [isImageSearchMode, setIsImageSearchMode] = useState(false);
   const [imageSearchFile, setImageSearchFile] = useState<File | null>(null);
@@ -126,19 +129,36 @@ export default function PostsTab() {
   };
 
   const handleTogglePosted = async (post: Post) => {
-    const id = getItemId(post);
     const currentPosted = typeof post.isPosted === 'boolean' ? post.isPosted : post.status === 'posted';
-    const nextPosted = !currentPosted;
+    const currentAccountIds = post.postedAccounts?.map((account) => account.socialAccountId).filter(Boolean) || [];
+
+    setPostedTarget(post);
+    setSelectedPostedAccountIds(currentPosted ? currentAccountIds : []);
+    setPostedModalOpen(true);
+  };
+
+  const handleConfirmPostedAccounts = async () => {
+    if (!postedTarget) return;
+
+    const id = getItemId(postedTarget);
+    const nextPosted = selectedPostedAccountIds.length > 0;
 
     try {
+      setSaving(true);
       await postService.updatePost(id, {
         isPosted: nextPosted,
         status: nextPosted ? 'posted' : 'draft',
+        postedSocialAccountIds: selectedPostedAccountIds,
       });
-      message.success(nextPosted ? 'Đã đánh dấu đã post' : 'Đã bỏ đánh dấu đã post');
+      message.success(nextPosted ? 'Đã cập nhật nơi đã post' : 'Đã bỏ đánh dấu đã post');
+      setPostedModalOpen(false);
+      setPostedTarget(null);
+      setSelectedPostedAccountIds([]);
       await loadPosts(page, limit);
     } catch (error: any) {
-      message.error(error?.response?.data?.message || 'Cập nhật trạng thái thất bại');
+      message.error(error?.response?.data?.message || 'Cập nhật nơi đã post thất bại');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -241,6 +261,32 @@ export default function PostsTab() {
         </Spin>
         <Pagination current={page} pageSize={limit} total={total} showSizeChanger pageSizeOptions={[12, 24, 48]} onChange={(p, ps) => { setPage(p); setLimit(ps); }} />
       </div>
+
+      <Modal
+        title="Chọn nơi đã post bài"
+        open={postedModalOpen}
+        okText="Cập nhật"
+        cancelText="Hủy"
+        confirmLoading={saving}
+        onOk={handleConfirmPostedAccounts}
+        onCancel={() => {
+          setPostedModalOpen(false);
+          setPostedTarget(null);
+          setSelectedPostedAccountIds([]);
+        }}
+      >
+        <Select
+          mode="multiple"
+          allowClear
+          showSearch
+          className="w-100"
+          optionFilterProp="label"
+          placeholder="Chọn tài khoản/nền tảng đã đăng bài"
+          value={selectedPostedAccountIds}
+          options={socialAccountOptions}
+          onChange={setSelectedPostedAccountIds}
+        />
+      </Modal>
     </div>
   );
 }

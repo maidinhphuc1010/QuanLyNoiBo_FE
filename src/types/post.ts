@@ -20,6 +20,7 @@ export interface PostedAccount {
   accountName?: string;
   accountUsername?: string;
   username?: string;
+  displayName?: string;
   postedAt?: string;
   url?: string;
   note?: string;

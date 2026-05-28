@@ -52,6 +52,14 @@ function getPostedAccountUsername(account: PostedAccount) {
   return account.accountUsername || account.username;
 }
 
+function getPostedAccountLabel(account: PostedAccount) {
+  return account.displayName || account.accountName || getPostedAccountUsername(account) || account.socialAccountId;
+}
+
+function getPostedAccountFullLabel(account: PostedAccount) {
+  return [getPostedAccountLabel(account), getPlatformLabel(account.platform)].filter(Boolean).join(' (') + (account.platform ? ')' : '');
+}
+
 export default function PostCard({ post, onEdit, onDelete, onTogglePosted }: PostCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
   const id = getItemId(post);
@@ -63,7 +71,7 @@ export default function PostCard({ post, onEdit, onDelete, onTogglePosted }: Pos
   const relatedProductsText = post.relatedProducts?.map((product) => product.name).filter(Boolean).join(', ') || '';
   const postedAccounts = post.postedAccounts || [];
   const postedAccountsText = postedAccounts
-    .map((account) => [getPlatformLabel(account.platform), account.accountName || getPostedAccountUsername(account), account.url].filter(Boolean).join(' - '))
+    .map((account) => [getPostedAccountFullLabel(account), account.url].filter(Boolean).join(' - '))
     .join('\n');
 
   const copy = async (text?: string, label = 'nội dung') => {
@@ -140,7 +148,7 @@ export default function PostCard({ post, onEdit, onDelete, onTogglePosted }: Pos
               }}
             />
           </Tooltip>,
-          <Tooltip title={posted ? 'Bỏ đánh dấu đã post' : 'Đánh dấu đã post'} key="toggle-posted">
+          <Tooltip title={postedAccountsText ? `Đã post trên: ${postedAccountsText}` : posted ? 'Xem/chỉnh nơi đã post' : 'Đánh dấu đã post'} key="toggle-posted">
             <Button
               type="text"
               icon={<CheckCircleOutlined />}
@@ -205,7 +213,7 @@ export default function PostCard({ post, onEdit, onDelete, onTogglePosted }: Pos
             <Tag color={statusColor}>{statusLabel}</Tag>
             {postedAccounts.map((account) => (
               <Tag color="blue" key={account.socialAccountId}>
-                {[getPlatformLabel(account.platform), account.accountName || getPostedAccountUsername(account)].filter(Boolean).join(' - ') || account.socialAccountId}
+                {getPostedAccountFullLabel(account)}
               </Tag>
             ))}
           </Space>
@@ -319,7 +327,7 @@ export default function PostCard({ post, onEdit, onDelete, onTogglePosted }: Pos
               {postedAccounts.length ? (
                 <Space direction="vertical" className="w-100">
                   {postedAccounts.map((account) => {
-                    const label = [getPlatformLabel(account.platform), account.accountName || getPostedAccountUsername(account)].filter(Boolean).join(' - ') || account.socialAccountId;
+                    const label = getPostedAccountFullLabel(account);
                     const postedAt = account.postedAt ? dayjs(account.postedAt).format('DD/MM/YYYY HH:mm') : undefined;
 
                     return (
