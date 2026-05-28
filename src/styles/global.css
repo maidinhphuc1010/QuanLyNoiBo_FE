@@ -114,6 +114,79 @@ svg {
   white-space: nowrap;
 }
 
+.header-meta {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.header-meta-item {
+  min-width: 0;
+  max-width: 260px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 11px;
+  border: 1px solid #d8f1ef;
+  border-radius: 999px;
+  background: #f7ffff;
+  color: #075f5b;
+  font-size: 13px;
+  line-height: 1.2;
+  box-shadow: 0 8px 18px rgba(8, 91, 88, 0.05);
+}
+
+.header-meta-item span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-trigger {
+  height: auto;
+  padding: 6px 10px;
+  border-radius: 16px;
+}
+
+.profile-trigger:hover {
+  background: #f1ffff !important;
+}
+
+.profile-info-list {
+  display: grid;
+  gap: 12px;
+}
+
+.profile-info-row {
+  display: grid;
+  grid-template-columns: 22px 120px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e1f3f2;
+  border-radius: 14px;
+  background: #f9ffff;
+}
+
+.profile-info-row > .anticon {
+  color: #0f9f9a;
+}
+
+.profile-info-row > span:nth-child(2) {
+  color: #6a8f8d;
+}
+
+.profile-info-row .ant-typography {
+  min-width: 0;
+  margin-bottom: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .header-user {
   display: flex;
   flex-direction: column;
@@ -406,6 +479,26 @@ svg {
     font-size: 18px;
   }
 
+  .header-meta {
+    width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .header-meta-item {
+    flex: 0 0 auto;
+    max-width: 240px;
+    font-size: 12px;
+    padding: 6px 9px;
+  }
+
+  .profile-trigger {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 6px 0;
+  }
+
   .brand-logo.small {
     flex: 0 0 36px;
     width: 36px;
@@ -536,6 +629,24 @@ svg {
 
   .header-user .ant-typography {
     max-width: 220px;
+  }
+
+  .header-meta {
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow-x: visible;
+  }
+
+  .header-meta-item {
+    max-width: 100%;
+  }
+
+  .profile-info-row {
+    grid-template-columns: 22px 1fr;
+  }
+
+  .profile-info-row > .ant-typography {
+    grid-column: 2;
   }
 
   .ant-space-compact {
