@@ -1,4 +1,4 @@
-import { AppstoreOutlined, BarChartOutlined, FileTextOutlined, TeamOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, BarChartOutlined, FileTextOutlined, ShareAltOutlined, TeamOutlined } from '@ant-design/icons';
 import { Card, Col, DatePicker, Empty, Row, Select, Space, Spin, Statistic, Tabs, Tag, Typography, message } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { Suspense, lazy, useEffect, useMemo, useState, type ReactNode } from 'react';
@@ -6,6 +6,7 @@ import { useAuth } from '../App';
 import AppLayout from '../components/AppLayout';
 const ProductsTab = lazy(() => import('../components/ProductsTab'));
 const PostsTab = lazy(() => import('../components/PostsTab'));
+const SocialAccountsTab = lazy(() => import('../components/SocialAccountsTab'));
 const UsersTab = lazy(() => import('../components/UsersTab'));
 import { statisticsService } from '../services/statistics.service';
 import type { StatisticsMetric, StatisticsOverview, StatisticsPeriod } from '../types/statistics';
@@ -207,6 +208,19 @@ export default function DashboardPage() {
         children: (
           <TabLoader>
             <PostsTab />
+          </TabLoader>
+        ),
+      },
+      {
+        key: 'social-accounts',
+        label: (
+          <span>
+            <ShareAltOutlined /> Tài khoản/nền tảng
+          </span>
+        ),
+        children: (
+          <TabLoader>
+            <SocialAccountsTab />
           </TabLoader>
         ),
       },

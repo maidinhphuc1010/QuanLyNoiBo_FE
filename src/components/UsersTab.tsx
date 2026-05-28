@@ -24,9 +24,10 @@ export default function UsersTab() {
   const loadUsers = async (nextPage = page, nextLimit = limit) => {
     try {
       setLoading(true);
-      const res = await userService.getUsers({ page: nextPage, limit: nextLimit, search, role, status });
-      setItems(res.data);
-      setTotal(res.total);
+      const res = await userService.getUsers({ page: nextPage, limit: nextLimit, search, role: role || 'user', status });
+      const visibleUsers = res.data.filter((item) => item.role !== 'admin');
+      setItems(visibleUsers);
+      setTotal(role === 'admin' ? 0 : Math.min(res.total, visibleUsers.length || res.total));
     } catch (error: any) {
       message.error(error?.response?.data?.message || 'Không tải được users');
     } finally {
@@ -97,7 +98,7 @@ export default function UsersTab() {
               setPage(1);
             }}
           />
-          <Select allowClear placeholder="Role" value={role} onChange={(value) => { setRole(value); setPage(1); }} options={[{ label: 'Admin', value: 'admin' }, { label: 'User', value: 'user' }]} />
+          <Select allowClear placeholder="Role" value={role} onChange={(value) => { setRole(value); setPage(1); }} options={[{ label: 'User', value: 'user' }]} />
           <Select allowClear placeholder="Trạng thái" value={status} onChange={(value) => { setStatus(value); setPage(1); }} options={[{ label: 'Active', value: 'active' }, { label: 'Inactive', value: 'inactive' }]} />
         </div>
         <UserTable
