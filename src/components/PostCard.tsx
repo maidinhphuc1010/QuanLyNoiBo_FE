@@ -1,4 +1,4 @@
-import { CopyOutlined, DeleteOutlined, DownloadOutlined, EditOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CopyOutlined, DeleteOutlined, DownloadOutlined, EditOutlined } from '@ant-design/icons';
 import { Button, Card, Descriptions, Image, Modal, Popconfirm, Space, Tag, Tooltip, Typography, message } from 'antd';
 import dayjs from 'dayjs';
 import type { ReactNode } from 'react';
@@ -12,6 +12,7 @@ interface PostCardProps {
   post: Post;
   onEdit: (post: Post) => void;
   onDelete: (id: string) => void;
+  onTogglePosted: (post: Post) => void;
 }
 
 function getMediaUrl(media: string | PostMedia): string {
@@ -32,7 +33,7 @@ const postStatusLabel: Record<PostStatus, string> = {
   posted: 'Đã post',
 };
 
-export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
+export default function PostCard({ post, onEdit, onDelete, onTogglePosted }: PostCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
   const id = getItemId(post);
   const media = post.media || [];
@@ -113,6 +114,17 @@ export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
               onClick={(event) => {
                 event.stopPropagation();
                 copy(post.caption || '', 'caption');
+              }}
+            />
+          </Tooltip>,
+          <Tooltip title={posted ? 'Bỏ đánh dấu đã post' : 'Đánh dấu đã post'} key="toggle-posted">
+            <Button
+              type="text"
+              icon={<CheckCircleOutlined />}
+              style={{ color: posted ? '#52c41a' : undefined }}
+              onClick={(event) => {
+                event.stopPropagation();
+                onTogglePosted(post);
               }}
             />
           </Tooltip>,

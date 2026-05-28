@@ -100,6 +100,23 @@ export default function PostsTab() {
     }
   };
 
+  const handleTogglePosted = async (post: Post) => {
+    const id = getItemId(post);
+    const currentPosted = typeof post.isPosted === 'boolean' ? post.isPosted : post.status === 'posted';
+    const nextPosted = !currentPosted;
+
+    try {
+      await postService.updatePost(id, {
+        isPosted: nextPosted,
+        status: nextPosted ? 'posted' : 'draft',
+      });
+      message.success(nextPosted ? 'Đã đánh dấu đã post' : 'Đã bỏ đánh dấu đã post');
+      await loadPosts(page, limit);
+    } catch (error: any) {
+      message.error(error?.response?.data?.message || 'Cập nhật trạng thái thất bại');
+    }
+  };
+
   const userOptions = useMemo(() => users.map((u) => ({ label: u.name || u.username || u.email, value: getItemId(u) })), [users]);
 
   return (
@@ -158,7 +175,7 @@ export default function PostsTab() {
           {items.length ? (
             <div className="card-grid">
               {items.map((post) => (
-                <PostCard key={getItemId(post)} post={post} onEdit={setEditing} onDelete={handleDelete} />
+                <PostCard key={getItemId(post)} post={post} onEdit={setEditing} onDelete={handleDelete} onTogglePosted={handleTogglePosted} />
               ))}
             </div>
           ) : (

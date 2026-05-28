@@ -40,7 +40,6 @@ export default function UserForm({ editing, loading, onSubmit, onCancelEdit }: U
   const handleFinish = async (values: any) => {
     const payload: UserPayload = {
       email: values.email,
-      name: values.name,
       username: values.name,
       role: values.role,
       citizenId: values.citizenId,
