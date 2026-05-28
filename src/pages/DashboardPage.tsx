@@ -1,12 +1,12 @@
 import { AppstoreOutlined, BarChartOutlined, FileTextOutlined, TeamOutlined } from '@ant-design/icons';
 import { Card, Col, DatePicker, Empty, Row, Select, Space, Spin, Statistic, Tabs, Tag, Typography, message } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useAuth } from '../App';
 import AppLayout from '../components/AppLayout';
-import PostsTab from '../components/PostsTab';
-import ProductsTab from '../components/ProductsTab';
-import UsersTab from '../components/UsersTab';
+const ProductsTab = lazy(() => import('../components/ProductsTab'));
+const PostsTab = lazy(() => import('../components/PostsTab'));
+const UsersTab = lazy(() => import('../components/UsersTab'));
 import { statisticsService } from '../services/statistics.service';
 import type { StatisticsMetric, StatisticsOverview, StatisticsPeriod } from '../types/statistics';
 
@@ -35,6 +35,20 @@ function renderGrowth(metric: StatisticsMetric) {
 
 function formatRange(value?: string) {
   return value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '-';
+}
+
+function TabLoader({ children }: { children: ReactNode }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="tab-loading">
+          <Spin tip="Đang tải..." />
+        </div>
+      }
+    >
+      {children}
+    </Suspense>
+  );
 }
 
 function StatisticsTab() {
@@ -177,7 +191,11 @@ export default function DashboardPage() {
             <AppstoreOutlined /> Kho sản phẩm
           </span>
         ),
-        children: <ProductsTab />,
+        children: (
+          <TabLoader>
+            <ProductsTab />
+          </TabLoader>
+        ),
       },
       {
         key: 'posts',
@@ -186,7 +204,11 @@ export default function DashboardPage() {
             <FileTextOutlined /> Kho bài đăng
           </span>
         ),
-        children: <PostsTab />,
+        children: (
+          <TabLoader>
+            <PostsTab />
+          </TabLoader>
+        ),
       },
       ...(user?.role === 'admin'
         ? [
@@ -197,7 +219,11 @@ export default function DashboardPage() {
                   <TeamOutlined /> Quản lý người dùng
                 </span>
               ),
-              children: <UsersTab />,
+              children: (
+                <TabLoader>
+                  <UsersTab />
+                </TabLoader>
+              ),
             },
           ]
         : []),
