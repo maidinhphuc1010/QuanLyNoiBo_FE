@@ -80,7 +80,6 @@ export default function UserForm({ editing, loading, onSubmit, onCancelEdit }: U
             { required: true, message: 'Nhập CCCD/CMND' },
             { min: 9, message: 'CCCD/CMND tối thiểu 9 ký tự' },
           ]}
-          extra={!editing ? 'Nếu không nhập password, backend sẽ dùng CCCD/CMND làm mật khẩu mặc định.' : undefined}
         >
           <Input placeholder="012345678901" />
         </Form.Item>
