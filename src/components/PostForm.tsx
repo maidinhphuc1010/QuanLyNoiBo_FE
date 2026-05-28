@@ -1,11 +1,14 @@
 import { InboxOutlined, LinkOutlined, SaveOutlined } from '@ant-design/icons';
-import { Button, Checkbox, Form, Input, Select, Space, Upload, message } from 'antd';
+import { Button, Checkbox, DatePicker, Form, Input, Select, Space, Upload, message } from 'antd';
 import type { UploadProps } from 'antd';
+import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { getItemId } from '../services/api';
 import { productService } from '../services/product.service';
+import { socialAccountService } from '../services/social-account.service';
 import { uploadService } from '../services/upload.service';
-import type { Post, PostMedia, PostPayload } from '../types/post';
+import type { Post, PostMedia, PostPayload, PostedAccount } from '../types/post';
+import type { SocialAccount } from '../types/social-account';
 import type { Product } from '../types/product';
 import MediaPreview from './MediaPreview';
 
@@ -38,9 +41,14 @@ export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: P
   const [pasteUrl, setPasteUrl] = useState('');
   const [pasting, setPasting] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
 
   useEffect(() => {
     productService.getProducts({ page: 1, limit: 100 }).then((res) => setProducts(res.data)).catch(() => undefined);
+    socialAccountService
+      .getSocialAccounts({ page: 1, limit: 200, isActive: true })
+      .then((res) => setSocialAccounts(res.data))
+      .catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -50,6 +58,22 @@ export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: P
         relatedProductIds:
           editing.productIds || editing.relatedProductIds || editing.relatedProducts?.map((p) => p.id || p._id).filter(Boolean),
         isPosted: typeof editing.isPosted === 'boolean' ? editing.isPosted : editing.status === 'posted',
+        postedAccountIds: editing.postedAccounts?.map((account) => account.socialAccountId).filter(Boolean) || [],
+        postedAccountUrls: Object.fromEntries(
+          (editing.postedAccounts || [])
+            .filter((account) => account.socialAccountId)
+            .map((account) => [account.socialAccountId, account.url]),
+        ),
+        postedAccountNotes: Object.fromEntries(
+          (editing.postedAccounts || [])
+            .filter((account) => account.socialAccountId)
+            .map((account) => [account.socialAccountId, account.note]),
+        ),
+        postedAccountDates: Object.fromEntries(
+          (editing.postedAccounts || [])
+            .filter((account) => account.socialAccountId && account.postedAt)
+            .map((account) => [account.socialAccountId, dayjs(account.postedAt)]),
+        ),
       });
       setMediaUrls((editing.media || []).map(getMediaUrl).filter(Boolean));
     } else {
@@ -99,14 +123,34 @@ export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: P
     }
   };
 
+  const buildPostedAccounts = (values: any): PostedAccount[] => {
+    const selectedIds: string[] = values.postedAccountIds || [];
+    return selectedIds
+      .map((socialAccountId) => {
+        const account = socialAccounts.find((item) => getItemId(item) === socialAccountId);
+        return {
+          socialAccountId,
+          platform: account?.platform,
+          accountName: account?.name,
+          username: account?.username,
+          postedAt: values.postedAccountDates?.[socialAccountId]?.toISOString?.(),
+          url: values.postedAccountUrls?.[socialAccountId],
+          note: values.postedAccountNotes?.[socialAccountId],
+        };
+      })
+      .filter((account) => account.socialAccountId);
+  };
+
   const handleFinish = async (values: any) => {
+    const postedAccounts = buildPostedAccounts(values);
     await onSubmit({
       caption: values.caption,
       hashtags: values.hashtags || [],
       productLinks: values.productLinks || [],
       productIds: values.relatedProductIds || [],
-      status: values.isPosted ? 'posted' : 'draft',
-      isPosted: Boolean(values.isPosted),
+      postedAccounts,
+      status: values.isPosted || postedAccounts.length ? 'posted' : 'draft',
+      isPosted: Boolean(values.isPosted || postedAccounts.length),
       media: mediaUrls.map(toPostMedia),
     });
     if (!editing) {
@@ -138,7 +182,7 @@ export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: P
 
       <MediaPreview urls={mediaUrls} onRemove={(url) => setMediaUrls((prev) => prev.filter((item) => item !== url))} />
 
-      <Form form={form} layout="vertical" onFinish={handleFinish} initialValues={{ isPosted: false }}>
+      <Form form={form} layout="vertical" onFinish={handleFinish} initialValues={{ isPosted: false, postedAccountIds: [] }}>
         <Form.Item name="caption" label="Caption">
           <Input.TextArea rows={4} placeholder="Nội dung caption" />
         </Form.Item>
@@ -160,6 +204,51 @@ export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: P
         </Form.Item>
         <Form.Item name="isPosted" valuePropName="checked">
           <Checkbox>Đã post</Checkbox>
+        </Form.Item>
+        <Form.Item name="postedAccountIds" label="Tài khoản/nền tảng đã đăng">
+          <Select
+            mode="multiple"
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            options={socialAccounts.map((account) => ({
+              label: `${account.platform} - ${account.name}${account.username ? ` (${account.username})` : ''}`,
+              value: getItemId(account),
+            }))}
+            placeholder="Chọn tài khoản/nền tảng đã đăng bài"
+          />
+        </Form.Item>
+        <Form.Item shouldUpdate={(prev, current) => prev.postedAccountIds !== current.postedAccountIds}>
+          {({ getFieldValue }) => {
+            const selectedIds: string[] = getFieldValue('postedAccountIds') || [];
+            if (!selectedIds.length) return null;
+
+            return (
+              <Space direction="vertical" className="w-100">
+                {selectedIds.map((socialAccountId) => {
+                  const account = socialAccounts.find((item) => getItemId(item) === socialAccountId);
+                  const label = account
+                    ? `${account.platform} - ${account.name}${account.username ? ` (${account.username})` : ''}`
+                    : socialAccountId;
+
+                  return (
+                    <Space key={socialAccountId} direction="vertical" className="w-100 posted-account-extra">
+                      <strong>{label}</strong>
+                      <Form.Item name={['postedAccountUrls', socialAccountId]} label="Link bài đã đăng">
+                        <Input placeholder="URL bài đăng trên nền tảng" />
+                      </Form.Item>
+                      <Form.Item name={['postedAccountDates', socialAccountId]} label="Thời gian đăng">
+                        <DatePicker showTime format="DD/MM/YYYY HH:mm" className="w-100" />
+                      </Form.Item>
+                      <Form.Item name={['postedAccountNotes', socialAccountId]} label="Ghi chú">
+                        <Input.TextArea rows={2} placeholder="Ghi chú cho tài khoản/nền tảng này" />
+                      </Form.Item>
+                    </Space>
+                  );
+                })}
+              </Space>
+            );
+          }}
         </Form.Item>
         <Space wrap>
           <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={loading || uploading || pasting}>

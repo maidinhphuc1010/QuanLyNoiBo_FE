@@ -42,6 +42,10 @@ export default function PostCard({ post, onEdit, onDelete, onTogglePosted }: Pos
   const hashtagsText = (post.hashtags || []).join(' ');
   const productLinksText = (post.productLinks || []).join('\n');
   const relatedProductsText = post.relatedProducts?.map((product) => product.name).filter(Boolean).join(', ') || '';
+  const postedAccounts = post.postedAccounts || [];
+  const postedAccountsText = postedAccounts
+    .map((account) => [account.platform, account.accountName || account.username, account.url].filter(Boolean).join(' - '))
+    .join('\n');
 
   const copy = async (text?: string, label = 'nội dung') => {
     if (!text) return message.warning('Không có nội dung để copy');
@@ -178,7 +182,14 @@ export default function PostCard({ post, onEdit, onDelete, onTogglePosted }: Pos
               </Typography.Link>
             ))}
           </Space>
-          <Tag color={statusColor}>{statusLabel}</Tag>
+          <Space wrap>
+            <Tag color={statusColor}>{statusLabel}</Tag>
+            {postedAccounts.map((account) => (
+              <Tag color="blue" key={account.socialAccountId}>
+                {[account.platform, account.accountName || account.username].filter(Boolean).join(' - ') || account.socialAccountId}
+              </Tag>
+            ))}
+          </Space>
         </Space>
       </Card>
 
@@ -198,6 +209,7 @@ export default function PostCard({ post, onEdit, onDelete, onTogglePosted }: Pos
               `Sản phẩm liên quan: ${relatedProductsText}`,
               `Media: ${mediaUrls.join('\n')}`,
               `Trạng thái: ${statusLabel}`,
+              `Tài khoản đã đăng: ${postedAccountsText}`,
             ].join('\n'), 'thông tin bài đăng')}
           >
             Copy tất cả
@@ -283,6 +295,38 @@ export default function PostCard({ post, onEdit, onDelete, onTogglePosted }: Pos
             </Descriptions.Item>
             <Descriptions.Item label="Trạng thái">
               {detailLine(<Tag color={statusColor}>{statusLabel}</Tag>, copyButton(statusLabel, 'trạng thái'))}
+            </Descriptions.Item>
+            <Descriptions.Item label="Tài khoản/nền tảng đã đăng">
+              {postedAccounts.length ? (
+                <Space direction="vertical" className="w-100">
+                  {postedAccounts.map((account) => {
+                    const label = [account.platform, account.accountName || account.username].filter(Boolean).join(' - ') || account.socialAccountId;
+                    const postedAt = account.postedAt ? dayjs(account.postedAt).format('DD/MM/YYYY HH:mm') : undefined;
+
+                    return (
+                      <div key={account.socialAccountId} className="detail-line">
+                        <div className="detail-value">
+                          <Space direction="vertical" size={2}>
+                            <Tag color="blue">{label}</Tag>
+                            {postedAt && <Typography.Text type="secondary">Đăng lúc: {postedAt}</Typography.Text>}
+                            {account.url ? (
+                              <Typography.Link href={account.url} target="_blank" ellipsis>
+                                {account.url}
+                              </Typography.Link>
+                            ) : null}
+                            {account.note ? <Typography.Text>{account.note}</Typography.Text> : null}
+                          </Space>
+                        </div>
+                        <div className="detail-actions">
+                          {copyButton([label, postedAt, account.url, account.note].filter(Boolean).join('\n'), 'thông tin tài khoản đăng')}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </Space>
+              ) : (
+                <Typography.Text>-</Typography.Text>
+              )}
             </Descriptions.Item>
             <Descriptions.Item label="Ngày tạo">{post.createdAt ? dayjs(post.createdAt).format('DD/MM/YYYY HH:mm') : '-'}</Descriptions.Item>
             <Descriptions.Item label="Cập nhật">{post.updatedAt ? dayjs(post.updatedAt).format('DD/MM/YYYY HH:mm') : '-'}</Descriptions.Item>

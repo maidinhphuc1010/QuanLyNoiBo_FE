@@ -14,6 +14,16 @@ export interface PostMedia {
   resourceType?: 'image' | 'video' | string;
 }
 
+export interface PostedAccount {
+  socialAccountId: string;
+  platform?: string;
+  accountName?: string;
+  username?: string;
+  postedAt?: string;
+  url?: string;
+  note?: string;
+}
+
 export interface Post {
   id: string;
   _id?: string;
@@ -24,6 +34,7 @@ export interface Post {
   relatedProductIds?: string[];
   relatedProducts?: RelatedProductRef[];
   media?: Array<string | PostMedia>;
+  postedAccounts?: PostedAccount[];
   status: PostStatus;
   isPosted?: boolean;
   userId?: string;
@@ -38,6 +49,7 @@ export interface PostPayload {
   productLinks: string[];
   productIds: string[];
   media: PostMedia[];
+  postedAccounts?: PostedAccount[];
   status?: PostStatus;
   isPosted: boolean;
 }
