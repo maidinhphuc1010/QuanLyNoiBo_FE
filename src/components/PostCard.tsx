@@ -1,7 +1,7 @@
 import { CopyOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { Button, Card, Image, Popconfirm, Space, Tag, Tooltip, Typography, message } from 'antd';
 import { getItemId } from '../services/api';
-import type { Post } from '../types/post';
+import type { Post, PostMedia } from '../types/post';
 import { isVideo } from './MediaPreview';
 
 interface PostCardProps {
@@ -10,10 +10,14 @@ interface PostCardProps {
   onDelete: (id: string) => void;
 }
 
+function getMediaUrl(media: string | PostMedia): string {
+  return typeof media === 'string' ? media : media.url;
+}
+
 export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
   const id = getItemId(post);
   const media = post.media || [];
-  const first = media[0];
+  const first = media[0] ? getMediaUrl(media[0]) : '';
 
   const copy = async (text: string, label: string) => {
     if (!text) return message.warning('Không có nội dung để copy');

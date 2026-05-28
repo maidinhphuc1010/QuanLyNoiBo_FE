@@ -6,15 +6,24 @@ export interface RelatedProductRef {
   name?: string;
 }
 
+export interface PostMedia {
+  url: string;
+  type?: 'image' | 'video' | string;
+  publicId?: string;
+  downloadUrl?: string;
+  resourceType?: 'image' | 'video' | string;
+}
+
 export interface Post {
   id: string;
   _id?: string;
   caption?: string;
   hashtags?: string[];
   productLinks?: string[];
+  productIds?: string[];
   relatedProductIds?: string[];
   relatedProducts?: RelatedProductRef[];
-  media?: string[];
+  media?: Array<string | PostMedia>;
   status: PostStatus;
   userId?: string;
   similarity?: number;
@@ -26,8 +35,8 @@ export interface PostPayload {
   caption?: string;
   hashtags: string[];
   productLinks: string[];
-  relatedProductIds: string[];
-  media: string[];
+  productIds: string[];
+  media: PostMedia[];
   status: PostStatus;
 }
 

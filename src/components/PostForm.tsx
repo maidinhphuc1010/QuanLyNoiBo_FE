@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { getItemId } from '../services/api';
 import { productService } from '../services/product.service';
 import { uploadService } from '../services/upload.service';
-import type { Post, PostPayload } from '../types/post';
+import type { Post, PostMedia, PostPayload } from '../types/post';
 import type { Product } from '../types/product';
 import MediaPreview from './MediaPreview';
 
@@ -14,6 +14,21 @@ interface PostFormProps {
   loading?: boolean;
   onSubmit: (payload: PostPayload) => Promise<void>;
   onCancelEdit: () => void;
+}
+
+function getMediaUrl(media: string | PostMedia): string {
+  return typeof media === 'string' ? media : media.url;
+}
+
+function getMediaType(url: string): 'image' | 'video' {
+  return /\.(mp4|mov|webm|m4v|avi)(\?.*)?$/i.test(url) ? 'video' : 'image';
+}
+
+function toPostMedia(url: string): PostMedia {
+  return {
+    url,
+    type: getMediaType(url),
+  };
 }
 
 export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: PostFormProps) {
@@ -34,7 +49,7 @@ export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: P
         ...editing,
         relatedProductIds: editing.relatedProductIds || editing.relatedProducts?.map((p) => p.id || p._id).filter(Boolean),
       });
-      setMediaUrls(editing.media || []);
+      setMediaUrls((editing.media || []).map(getMediaUrl).filter(Boolean));
     } else {
       form.resetFields();
       setMediaUrls([]);
@@ -87,9 +102,9 @@ export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: P
       caption: values.caption,
       hashtags: values.hashtags || [],
       productLinks: values.productLinks || [],
-      relatedProductIds: values.relatedProductIds || [],
+      productIds: values.relatedProductIds || [],
       status: values.status,
-      media: mediaUrls,
+      media: mediaUrls.map(toPostMedia),
     });
     if (!editing) {
       form.resetFields();
