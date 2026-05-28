@@ -47,7 +47,8 @@ export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: P
     if (editing) {
       form.setFieldsValue({
         ...editing,
-        relatedProductIds: editing.relatedProductIds || editing.relatedProducts?.map((p) => p.id || p._id).filter(Boolean),
+        relatedProductIds:
+          editing.productIds || editing.relatedProductIds || editing.relatedProducts?.map((p) => p.id || p._id).filter(Boolean),
       });
       setMediaUrls((editing.media || []).map(getMediaUrl).filter(Boolean));
     } else {
