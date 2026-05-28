@@ -51,6 +51,7 @@ export interface PostPayload {
   productIds: string[];
   media: PostMedia[];
   postedAccounts?: PostedAccount[];
+  postedSocialAccountIds?: string[];
   status?: PostStatus;
   isPosted: boolean;
 }

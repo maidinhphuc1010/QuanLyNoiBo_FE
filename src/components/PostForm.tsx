@@ -141,32 +141,27 @@ export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: P
   const buildPostedAccounts = (values: any): PostedAccount[] => {
     const selectedIds: string[] = values.postedAccountIds || [];
     return selectedIds
-      .map((socialAccountId) => {
-        const account = socialAccounts.find((item) => getItemId(item) === socialAccountId);
-        return {
-          socialAccountId,
-          platform: account?.platform,
-          accountName: account?.name,
-          accountUsername: account?.username,
-          username: account?.username,
-          postedAt: values.postedAccountDates?.[socialAccountId]?.toISOString?.(),
-          url: values.postedAccountUrls?.[socialAccountId],
-          note: values.postedAccountNotes?.[socialAccountId],
-        };
-      })
+      .map((socialAccountId) => ({
+        socialAccountId,
+        postedAt: values.postedAccountDates?.[socialAccountId]?.toISOString?.(),
+        url: values.postedAccountUrls?.[socialAccountId],
+        note: values.postedAccountNotes?.[socialAccountId],
+      }))
       .filter((account) => account.socialAccountId);
   };
 
   const handleFinish = async (values: any) => {
+    const postedSocialAccountIds: string[] = values.postedAccountIds || [];
     const postedAccounts = buildPostedAccounts(values);
     await onSubmit({
       caption: values.caption,
       hashtags: values.hashtags || [],
       productLinks: values.productLinks || [],
       productIds: values.relatedProductIds || [],
+      postedSocialAccountIds,
       postedAccounts,
-      status: values.isPosted || postedAccounts.length ? 'posted' : 'draft',
-      isPosted: Boolean(values.isPosted || postedAccounts.length),
+      status: values.isPosted || postedSocialAccountIds.length ? 'posted' : 'draft',
+      isPosted: Boolean(values.isPosted || postedSocialAccountIds.length),
       media: mediaUrls.map(toPostMedia),
     });
     if (!editing) {
