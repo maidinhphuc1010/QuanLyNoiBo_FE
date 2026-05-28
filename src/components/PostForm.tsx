@@ -1,5 +1,5 @@
 import { InboxOutlined, LinkOutlined, SaveOutlined } from '@ant-design/icons';
-import { Button, Form, Input, Select, Space, Upload, message } from 'antd';
+import { Button, Checkbox, Form, Input, Select, Space, Upload, message } from 'antd';
 import type { UploadProps } from 'antd';
 import { useEffect, useState } from 'react';
 import { getItemId } from '../services/api';
@@ -49,6 +49,7 @@ export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: P
         ...editing,
         relatedProductIds:
           editing.productIds || editing.relatedProductIds || editing.relatedProducts?.map((p) => p.id || p._id).filter(Boolean),
+        isPosted: typeof editing.isPosted === 'boolean' ? editing.isPosted : editing.status === 'posted',
       });
       setMediaUrls((editing.media || []).map(getMediaUrl).filter(Boolean));
     } else {
@@ -104,7 +105,8 @@ export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: P
       hashtags: values.hashtags || [],
       productLinks: values.productLinks || [],
       productIds: values.relatedProductIds || [],
-      status: values.status,
+      status: values.isPosted ? 'posted' : 'draft',
+      isPosted: Boolean(values.isPosted),
       media: mediaUrls.map(toPostMedia),
     });
     if (!editing) {
@@ -136,7 +138,7 @@ export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: P
 
       <MediaPreview urls={mediaUrls} onRemove={(url) => setMediaUrls((prev) => prev.filter((item) => item !== url))} />
 
-      <Form form={form} layout="vertical" onFinish={handleFinish} initialValues={{ status: 'draft' }}>
+      <Form form={form} layout="vertical" onFinish={handleFinish} initialValues={{ isPosted: false }}>
         <Form.Item name="caption" label="Caption">
           <Input.TextArea rows={4} placeholder="Nội dung caption" />
         </Form.Item>
@@ -156,11 +158,8 @@ export default function PostForm({ editing, loading, onSubmit, onCancelEdit }: P
             placeholder="Chọn sản phẩm"
           />
         </Form.Item>
-        <Form.Item name="status" label="Trạng thái" rules={[{ required: true }]}>
-          <Select options={[
-            { label: 'Đang chờ', value: 'draft' },
-            { label: 'Đã post', value: 'posted' },
-          ]} />
+        <Form.Item name="isPosted" valuePropName="checked">
+          <Checkbox>Đã post</Checkbox>
         </Form.Item>
         <Space wrap>
           <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={loading || uploading || pasting}>

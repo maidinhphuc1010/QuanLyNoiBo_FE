@@ -5,7 +5,7 @@ import { useAuth } from '../App';
 import { getItemId } from '../services/api';
 import { postService } from '../services/post.service';
 import { userService } from '../services/user.service';
-import type { Post, PostPayload, PostStatus } from '../types/post';
+import type { Post, PostPayload } from '../types/post';
 import type { User } from '../types/user';
 import ImageSearchBox from './ImageSearchBox';
 import PostCard from './PostCard';
@@ -18,7 +18,7 @@ export default function PostsTab() {
   const [editing, setEditing] = useState<Post | null>(null);
   const [search, setSearch] = useState('');
   const [userId, setUserId] = useState<string | undefined>();
-  const [status, setStatus] = useState<PostStatus | undefined>();
+  const [isPosted, setIsPosted] = useState<boolean | undefined>();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(12);
   const [total, setTotal] = useState(0);
@@ -33,7 +33,7 @@ export default function PostsTab() {
   const loadPosts = async (nextPage = page, nextLimit = limit) => {
     try {
       setLoading(true);
-      const res = await postService.getPosts({ page: nextPage, limit: nextLimit, search, userId, status });
+      const res = await postService.getPosts({ page: nextPage, limit: nextLimit, search, userId, isPosted });
       setItems(res.data);
       setTotal(res.total);
     } catch (error: any) {
@@ -62,7 +62,7 @@ export default function PostsTab() {
   useEffect(() => {
     if (isImageSearchMode) searchByImage(imageSearchFile, page, limit);
     else loadPosts(page, limit);
-  }, [page, limit, search, userId, status]);
+  }, [page, limit, search, userId, isPosted]);
 
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -138,14 +138,14 @@ export default function PostsTab() {
           />
           <Select
             allowClear
-            placeholder="Lọc trạng thái"
-            value={status}
+            placeholder="Lọc trạng thái post"
+            value={isPosted}
             options={[
-              { label: 'Đang chờ', value: 'draft' },
-              { label: 'Đã post', value: 'posted' },
+              { label: 'Chưa post', value: false },
+              { label: 'Đã post', value: true },
             ]}
             onChange={(value) => {
-              setStatus(value);
+              setIsPosted(value);
               setPage(1);
               setIsImageSearchMode(false);
             }}

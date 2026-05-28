@@ -4,14 +4,35 @@ import {
   EnvironmentOutlined,
   GlobalOutlined,
   HomeOutlined,
+  IdcardOutlined,
+  LockOutlined,
   LogoutOutlined,
   MailOutlined,
+  PhoneOutlined,
+  UploadOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { Avatar, Button, Divider, Dropdown, Layout, Modal, Space, Tag, Typography, message } from 'antd';
-import type { MenuProps } from 'antd';
+import {
+  Avatar,
+  Button,
+  Divider,
+  Dropdown,
+  Form,
+  Input,
+  Layout,
+  Modal,
+  Space,
+  Tabs,
+  Tag,
+  Typography,
+  Upload,
+  message,
+} from 'antd';
+import type { MenuProps, UploadProps } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../App';
+import { userService } from '../services/user.service';
+import type { ChangePasswordPayload, UpdateMePayload, User } from '../types/user';
 
 const { Header, Content } = Layout;
 const { Text, Title } = Typography;
@@ -70,17 +91,28 @@ function formatFullDateTime(date: Date) {
   }).format(date);
 }
 
+function getDisplayName(user?: User | null) {
+  return user?.name || user?.username || user?.email || 'Người dùng';
+}
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshMe } = useAuth();
+  const [profileForm] = Form.useForm<UpdateMePayload>();
+  const [passwordForm] = Form.useForm<ChangePasswordPayload>();
   const [now, setNow] = useState(new Date());
   const [profileOpen, setProfileOpen] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const [me, setMe] = useState<User | null>(user);
   const [location, setLocation] = useState<LocationState>({
     address: 'Đang lấy vị trí...',
   });
   const [weather, setWeather] = useState<WeatherState | null>(null);
 
-  const displayName = user?.name || user?.username || user?.email || 'Người dùng';
-  const userStatus = user?.isActive === false || user?.status === 'inactive' ? 'Không hoạt động' : 'Đang hoạt động';
+  const activeUser = me || user;
+  const displayName = getDisplayName(activeUser);
+  const userStatus = activeUser?.isActive === false || activeUser?.status === 'inactive' ? 'Không hoạt động' : 'Đang hoạt động';
 
   const weatherText = useMemo(() => {
     if (!weather) return 'Đang lấy thời tiết...';
@@ -90,6 +122,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     return `${Math.round(weather.temperature ?? 0)}°C · ${description}`;
   }, [weather]);
+
+  useEffect(() => {
+    setMe(user);
+  }, [user]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
@@ -168,12 +204,82 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const openProfile = async () => {
+    setProfileOpen(true);
+    setProfileLoading(true);
+    try {
+      const profile = await userService.getMe();
+      setMe(profile);
+      profileForm.setFieldsValue({
+        name: profile.name || profile.username,
+        username: profile.username || profile.name,
+        phone: profile.phone,
+        address: profile.address,
+      });
+    } catch {
+      message.error('Không tải được thông tin cá nhân');
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handleUpdateProfile = async (values: UpdateMePayload) => {
+    setProfileLoading(true);
+    try {
+      const updated = await userService.updateMe({
+        name: values.name,
+        username: values.username || values.name,
+        phone: values.phone,
+        address: values.address,
+      });
+      setMe(updated);
+      await refreshMe();
+      message.success('Đã cập nhật thông tin cá nhân');
+    } catch {
+      message.error('Cập nhật thông tin cá nhân thất bại');
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handleChangePassword = async (values: ChangePasswordPayload) => {
+    setPasswordLoading(true);
+    try {
+      await userService.changeMyPassword(values);
+      passwordForm.resetFields();
+      message.success('Đã đổi mật khẩu');
+    } catch {
+      message.error('Đổi mật khẩu thất bại');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const avatarUploadProps: UploadProps = {
+    accept: 'image/*',
+    showUploadList: false,
+    beforeUpload: async (file) => {
+      setAvatarLoading(true);
+      try {
+        const updated = await userService.updateMyAvatar(file);
+        setMe(updated);
+        await refreshMe();
+        message.success('Đã cập nhật ảnh đại diện');
+      } catch {
+        message.error('Upload ảnh đại diện thất bại');
+      } finally {
+        setAvatarLoading(false);
+      }
+      return Upload.LIST_IGNORE;
+    },
+  };
+
   const menuItems: MenuProps['items'] = [
     {
       key: 'profile',
       icon: <UserOutlined />,
       label: 'Trang cá nhân',
-      onClick: () => setProfileOpen(true),
+      onClick: openProfile,
     },
     {
       key: 'portal',
@@ -219,10 +325,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
           <Button className="profile-trigger" type="text">
             <Space>
-              <Avatar icon={<UserOutlined />} />
+              <Avatar src={activeUser?.avatarUrl} icon={<UserOutlined />} />
               <div className="header-user">
                 <Text strong>{displayName}</Text>
-                <Tag color={user?.role === 'admin' ? 'cyan' : 'green'}>{user?.role}</Tag>
+                <Tag color={activeUser?.role === 'admin' ? 'cyan' : 'green'}>{activeUser?.role}</Tag>
               </div>
             </Space>
           </Button>
@@ -231,51 +337,135 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <Content className="app-content">{children}</Content>
 
-      <Modal title="Trang cá nhân" open={profileOpen} onCancel={() => setProfileOpen(false)} footer={null}>
+      <Modal
+        title="Trang cá nhân"
+        open={profileOpen}
+        onCancel={() => setProfileOpen(false)}
+        footer={null}
+        width={720}
+      >
         <div className="profile-modal">
-          <Space align="center" size="middle">
-            <Avatar size={64} icon={<UserOutlined />} />
+          <Space align="center" size="middle" wrap>
+            <Avatar size={72} src={activeUser?.avatarUrl} icon={<UserOutlined />} />
             <div>
               <Title level={4}>{displayName}</Title>
-              <Tag color={user?.role === 'admin' ? 'cyan' : 'green'}>{user?.role}</Tag>
+              <Tag color={activeUser?.role === 'admin' ? 'cyan' : 'green'}>{activeUser?.role}</Tag>
               <Tag color={userStatus === 'Đang hoạt động' ? 'success' : 'default'}>{userStatus}</Tag>
             </div>
+            <Upload {...avatarUploadProps}>
+              <Button icon={<UploadOutlined />} loading={avatarLoading}>
+                Đổi ảnh đại diện
+              </Button>
+            </Upload>
           </Space>
 
           <Divider />
 
-          <div className="profile-info-list">
-            <div className="profile-info-row">
-              <UserOutlined />
-              <span>Họ tên</span>
-              <Text strong>{user?.name || user?.username || 'Chưa cập nhật'}</Text>
-            </div>
-            <div className="profile-info-row">
-              <MailOutlined />
-              <span>Email</span>
-              <Text strong>{user?.email}</Text>
-            </div>
-            <div className="profile-info-row">
-              <HomeOutlined />
-              <span>ID</span>
-              <Text code>{user?.id || user?._id}</Text>
-            </div>
-            <div className="profile-info-row">
-              <CalendarOutlined />
-              <span>Thời gian hiện tại</span>
-              <Text>{formatFullDateTime(now)}</Text>
-            </div>
-            <div className="profile-info-row">
-              <EnvironmentOutlined />
-              <span>Địa chỉ</span>
-              <Text>{location.address}</Text>
-            </div>
-            <div className="profile-info-row">
-              <CloudOutlined />
-              <span>Thời tiết</span>
-              <Text>{weatherText}</Text>
-            </div>
-          </div>
+          <Tabs
+            items={[
+              {
+                key: 'info',
+                label: 'Thông tin',
+                children: (
+                  <div className="profile-info-list">
+                    <div className="profile-info-row">
+                      <UserOutlined />
+                      <span>Họ tên</span>
+                      <Text strong>{activeUser?.name || activeUser?.username || 'Chưa cập nhật'}</Text>
+                    </div>
+                    <div className="profile-info-row">
+                      <MailOutlined />
+                      <span>Email</span>
+                      <Text strong>{activeUser?.email}</Text>
+                    </div>
+                    <div className="profile-info-row">
+                      <IdcardOutlined />
+                      <span>CCCD/CMND</span>
+                      <Text>{activeUser?.citizenId || 'Chưa cập nhật'}</Text>
+                    </div>
+                    <div className="profile-info-row">
+                      <PhoneOutlined />
+                      <span>Số điện thoại</span>
+                      <Text>{activeUser?.phone || 'Chưa cập nhật'}</Text>
+                    </div>
+                    <div className="profile-info-row">
+                      <HomeOutlined />
+                      <span>Địa chỉ cá nhân</span>
+                      <Text>{activeUser?.address || 'Chưa cập nhật'}</Text>
+                    </div>
+                    <div className="profile-info-row">
+                      <HomeOutlined />
+                      <span>ID</span>
+                      <Text code>{activeUser?.id || activeUser?._id}</Text>
+                    </div>
+                    <div className="profile-info-row">
+                      <CalendarOutlined />
+                      <span>Thời gian hiện tại</span>
+                      <Text>{formatFullDateTime(now)}</Text>
+                    </div>
+                    <div className="profile-info-row">
+                      <EnvironmentOutlined />
+                      <span>Vị trí hiện tại</span>
+                      <Text>{location.address}</Text>
+                    </div>
+                    <div className="profile-info-row">
+                      <CloudOutlined />
+                      <span>Thời tiết</span>
+                      <Text>{weatherText}</Text>
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                key: 'edit',
+                label: 'Chỉnh sửa',
+                children: (
+                  <Form form={profileForm} layout="vertical" onFinish={handleUpdateProfile}>
+                    <Form.Item name="name" label="Họ tên">
+                      <Input placeholder="Nhập họ tên" />
+                    </Form.Item>
+                    <Form.Item name="username" label="Username">
+                      <Input placeholder="Nhập username" />
+                    </Form.Item>
+                    <Form.Item name="phone" label="Số điện thoại">
+                      <Input placeholder="Nhập số điện thoại" />
+                    </Form.Item>
+                    <Form.Item name="address" label="Địa chỉ">
+                      <Input.TextArea rows={3} placeholder="Nhập địa chỉ" />
+                    </Form.Item>
+                    <Button type="primary" htmlType="submit" loading={profileLoading}>
+                      Lưu thông tin
+                    </Button>
+                  </Form>
+                ),
+              },
+              {
+                key: 'password',
+                label: 'Đổi mật khẩu',
+                children: (
+                  <Form form={passwordForm} layout="vertical" onFinish={handleChangePassword}>
+                    <Form.Item
+                      name="currentPassword"
+                      label="Mật khẩu hiện tại"
+                      rules={[{ required: true, message: 'Nhập mật khẩu hiện tại' }]}
+                    >
+                      <Input.Password prefix={<LockOutlined />} placeholder="Mật khẩu hiện tại" />
+                    </Form.Item>
+                    <Form.Item
+                      name="newPassword"
+                      label="Mật khẩu mới"
+                      rules={[{ required: true, message: 'Nhập mật khẩu mới' }, { min: 6, message: 'Tối thiểu 6 ký tự' }]}
+                    >
+                      <Input.Password prefix={<LockOutlined />} placeholder="Mật khẩu mới" />
+                    </Form.Item>
+                    <Button type="primary" htmlType="submit" loading={passwordLoading}>
+                      Đổi mật khẩu
+                    </Button>
+                  </Form>
+                ),
+              },
+            ]}
+          />
 
           <Divider />
 

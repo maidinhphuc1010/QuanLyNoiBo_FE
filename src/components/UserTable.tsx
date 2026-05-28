@@ -71,6 +71,8 @@ export default function UserTable({ users, loading, total, page, limit, currentU
       ),
     },
     { title: 'Tên', render: (_, record) => record.name || record.username || '-' },
+    { title: 'CCCD/CMND', dataIndex: 'citizenId', render: (value) => value || '-' },
+    { title: 'SĐT', dataIndex: 'phone', render: (value) => value || '-' },
     { title: 'Role', dataIndex: 'role', render: (role) => <Tag color={role === 'admin' ? 'cyan' : 'green'}>{role}</Tag> },
     {
       title: 'Trạng thái',
@@ -139,6 +141,11 @@ export default function UserTable({ users, loading, total, page, limit, currentU
             onClick={() => copy([
               `Email: ${detailUser.email || ''}`,
               `Tên: ${detailUser.name || detailUser.username || ''}`,
+              `CCCD/CMND: ${detailUser.citizenId || ''}`,
+              `SĐT: ${detailUser.phone || ''}`,
+              `Địa chỉ: ${detailUser.address || ''}`,
+              `Trang được xem: ${(detailUser.viewablePages || []).join(', ')}`,
+              `Trang được sửa: ${(detailUser.editablePages || []).join(', ')}`,
               `Role: ${detailUser.role || ''}`,
               `Trạng thái: ${detailActive ? 'active' : 'inactive'}`,
             ].join('\n'), 'thông tin người dùng')}
@@ -168,6 +175,29 @@ export default function UserTable({ users, loading, total, page, limit, currentU
             </Descriptions.Item>
             <Descriptions.Item label="Username">
               {detailLine(<Text>{detailUser.username || '-'}</Text>, detailUser.username, 'username')}
+            </Descriptions.Item>
+            <Descriptions.Item label="CCCD/CMND">
+              {detailLine(<Text>{detailUser.citizenId || '-'}</Text>, detailUser.citizenId, 'CCCD/CMND')}
+            </Descriptions.Item>
+            <Descriptions.Item label="Số điện thoại">
+              {detailLine(<Text>{detailUser.phone || '-'}</Text>, detailUser.phone, 'số điện thoại')}
+            </Descriptions.Item>
+            <Descriptions.Item label="Địa chỉ">
+              {detailLine(<Text>{detailUser.address || '-'}</Text>, detailUser.address, 'địa chỉ')}
+            </Descriptions.Item>
+            <Descriptions.Item label="Trang được xem">
+              {detailLine(
+                <Space wrap>{(detailUser.viewablePages || []).map((page) => <Tag key={page}>{page}</Tag>)}</Space>,
+                (detailUser.viewablePages || []).join(', '),
+                'trang được xem',
+              )}
+            </Descriptions.Item>
+            <Descriptions.Item label="Trang được sửa">
+              {detailLine(
+                <Space wrap>{(detailUser.editablePages || []).map((page) => <Tag key={page} color="blue">{page}</Tag>)}</Space>,
+                (detailUser.editablePages || []).join(', '),
+                'trang được sửa',
+              )}
             </Descriptions.Item>
             <Descriptions.Item label="Role">
               {detailLine(<Tag color={detailUser.role === 'admin' ? 'cyan' : 'green'}>{detailUser.role}</Tag>, detailUser.role, 'role')}

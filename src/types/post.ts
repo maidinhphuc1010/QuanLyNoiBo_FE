@@ -25,6 +25,7 @@ export interface Post {
   relatedProducts?: RelatedProductRef[];
   media?: Array<string | PostMedia>;
   status: PostStatus;
+  isPosted?: boolean;
   userId?: string;
   similarity?: number;
   createdAt?: string;
@@ -37,7 +38,8 @@ export interface PostPayload {
   productLinks: string[];
   productIds: string[];
   media: PostMedia[];
-  status: PostStatus;
+  status?: PostStatus;
+  isPosted: boolean;
 }
 
 export interface PostQuery {
@@ -46,4 +48,5 @@ export interface PostQuery {
   search?: string;
   userId?: string;
   status?: PostStatus;
+  isPosted?: boolean;
 }

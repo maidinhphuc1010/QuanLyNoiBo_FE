@@ -66,8 +66,10 @@ export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
     </div>
   );
 
-  const statusColor = post.status === 'posted' ? 'green' : 'orange';
-  const statusLabel = postStatusLabel[post.status] || post.status;
+  const posted = typeof post.isPosted === 'boolean' ? post.isPosted : post.status === 'posted';
+  const effectiveStatus: PostStatus = posted ? 'posted' : 'draft';
+  const statusColor = posted ? 'green' : 'orange';
+  const statusLabel = postStatusLabel[effectiveStatus];
 
   return (
     <>
